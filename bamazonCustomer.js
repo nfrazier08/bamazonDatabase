@@ -269,8 +269,47 @@ function addInventorytoExistingProducts(){
                 if (err) throw err;                            
                 console.log("Sale Processed - Thank You for shopping with Bamazon!")
             })          
-        })
-    
+        })    
     })
 }
 
+function addNewProductToInventory(){
+    inquirer.prompt([
+        {
+            type: "input",
+            message: "Enter the product name",
+            name: "productName"
+        },
+        {
+            type:"list",
+            message: "Select a department for the product (1 = Living Room, 2 = Kitchen, 3 = Bedroom, 4 = Bathroom",
+            choices:[   "1",
+                        "2",
+                        "3",
+                        "4" ],
+            name: "departmentKey"   
+        },
+        {
+            type: "input",
+            message: "Enter the price of the product",
+            name: "productPrice"
+        },
+        {
+            type: "input",
+            message: "Enter the starting quantity for the product",
+            name: "productQuantity"
+        }
+    ]).then(function(productAddition){
+        var createdPName = productAddition.productName;
+        var createdPDepartment = productAddition.departmentKey;
+        var createdPPrice = productAddition.productPrice;
+        var createdPQuantity = productAddition.productQuantity;
+
+        var newProduct = `INSERT INTO productItems (product_name, fk_department_id, product_price, product_stock_quantity) VALUES ('${createdPName}', '${createdPDepartment}', '${createdPPrice}', '${createdPQuantity}')`
+        connection.query(newProduct, function(err, results){
+            if (err) throw err;
+            console.log(results.affectedRows);
+            console.log("NEW PRODUCT ADDED TO THE INVENTORY");
+        })
+    })
+}
