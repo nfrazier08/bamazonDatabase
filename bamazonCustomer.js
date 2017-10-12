@@ -107,6 +107,8 @@ function shop(){
         var chosenUnitsRequested = buyerChoice.unitsRequested;
         printRequestedItem(chosenProductId, chosenUnitsRequested);
         determineSufficientStock(chosenProductId, chosenUnitsRequested);
+        //This doesn't work
+        listProductsAvailable(updateSQLTable(chosenUnitsRequested, currentQuantity));
       })
 } //End of SHOP function
 
@@ -127,13 +129,35 @@ function determineSufficientStock(chosenProductId, chosenUnitsRequested){
     connection.query(quantityQuery, function(err, results){
         if (err) throw err;
         currentQuantity = results[0].product_stock_quantity;
+        var pricePerProduct = results[0].product_price;
+
         if(chosenUnitsRequested > currentQuantity){
             console.log("INSUFFICIENT QUANTITY -- UNABLE TO COMPLETE PURCHASE REQUEST");
+            console.log("YOU WILL BE REROUTED TO SHOPPING PAGE AGAIN");
+            //THE TIMEOUT DOESN'T WORK....
+            setTimeout(shop(), 8000);
         } else if(chosenUnitsRequested <= currentQuantity){
             console.log("STOCK AVAILABLE --PROCESSING PURCHASE REQUEST...");
-        }
+            //Update Quantity of Stock
+            console.log("Bill of sale: ")
+                var remainingProductInventory = currentQuantity - chosenUnitsRequested;
+                    console.log("Remaining Stock Available: " + remainingProductInventory);
+                    console.log("You would like to purchase: " + chosenUnitsRequested + " items");
+                var totalCost = (chosenUnitsRequested * pricePerProduct);
+                    console.log("Price per Item: " + pricePerProduct);
+                    console.log("Total Cost: " + "$" + totalCost);
+
+                //Call function to update the table
+                recordSaleUpdateTable(chosenProductId, remainingProductInventory);
+            }
     })
 }
-    
 
-  
+//RECORD SALE
+function recordSaleUpdateTable(chosenProductId, remainingProductInventory){
+    var updateQuantity = `UPDATE productItems SET product_stock_quantity = ${remainingProductInventory} WHERE product_id = ${chosenProductId}`
+    connection.query(updateQuantity, function(err, results){
+        if (err) throw err;
+        console.log("Sale Processed - Thank You for shopping with Bamazon!")
+    })
+}
