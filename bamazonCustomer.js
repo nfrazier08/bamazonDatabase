@@ -29,7 +29,6 @@ function readBamazonAInventory(){
     })
 }
 
-
 function chooseBamazonView(){
     inquirer.prompt([
         {
@@ -44,6 +43,7 @@ function chooseBamazonView(){
             customerPortal();
         } else if(chosenPortal.chosenViewPortal === "Manager View"){
             console.log("You have chosen the Manager Portal");
+            managerPortal();
         } else if(chosenPortal.chosenViewPortal === "Supervisor View"){
             console.log("You have chosen the Supervisor View")
         } else if (chosenPortal.chosenViewPortal){
@@ -161,3 +161,116 @@ function recordSaleUpdateTable(chosenProductId, remainingProductInventory){
         console.log("Sale Processed - Thank You for shopping with Bamazon!")
     })
 }
+
+//MAIN MANAGER FUNCTIONS
+function managerPortal(){
+    inquirer.prompt([
+        {
+        type: "list",
+        message: "Would you like to: ", 
+        choices: ["View Products for Sale",
+                  "View Low Inventory",
+                  "Add to Inventory",
+                  "Add New Product"
+                 ], 
+        name: "managerPortalChoice"
+        }
+    ]).then(function(managerChoice){
+        if(managerChoice.managerPortalChoice === "View Products for Sale"){
+            console.log("You would like to see all products for sale");
+            listProductsAvailable();
+        } else if(managerChoice.managerPortalChoice === "View Low Inventory"){
+            console.log("View product inventory with count less than 5");
+            listLowInventory();
+        } else if (managerChoice.managerPortalChoice === "Add to Inventory"){
+            inquirer.prompt([
+                {
+                    type: "list",
+                    message: "Would you like to add more inventory?",
+                    choices: [
+                                "Yes, I would like to add more inventory",
+                                "No, Return me to main Manager Portal"
+                            ],
+                    name: "addInventory"
+                }
+            ]).then(function(addInventoryResponse){
+                if(addInventoryResponse.addInventory === "Yes, I would like to add more inventory"){
+                    console.log("Function to add more inventory will go here");
+                    addInventorytoExistingProducts();
+                } else if(addInventoryResponse.addInventory === "No, Return me to main Manager Portal")
+                    setTimeout(managerPortal, 3500);                    
+            })
+        } else if(managerChoice.managerPortalChoice === "Add New Product"){
+            inquirer.prompt([
+                {
+                    type: "list",
+                    message: "Would you like to add a new product?",
+                    choices: [
+                                "Yes, I would like to add a new product",
+                                "No, Return me to main Manager Portal"
+                            ],
+                    name: "addInventory"
+                }
+            ]).then(function(addProductResponse){
+                if(addProductResponse.addInventory === "Yes, I would like to add a new product"){
+                    console.log("Function to add a new product will go here");
+                    addNewProductToInventory();
+                } else if(addInventoryResponse.addInventory === "No, Return me to main Manager Portal")
+                    setTimeout(managerPortal, 3500);                   
+            })            
+        }
+    })
+}
+
+function listLowInventory(){
+    var table = new AsciiTable();
+    table.setHeading('ID', 'Product', 'Department Key', 'Price', 'Quantity');
+        // var thisQuery = "SELECT product_id, product_name, fk_department_id, product_price, product_stock_quantity FROM productItems";
+        connection.query(`SELECT product_id, product_name, department_name, product_price, product_stock_quantity FROM productItems LEFT JOIN departments ON department_id = fk_department_id WHERE product_stock_quantity <6`, function(err, result){
+            if(err) throw err;
+            // console.log(result);
+            result.forEach((product ) => {
+                // console.log(product);
+                // table.addRow(product.product_id);
+                table.addRow(product.product_id, product.product_name, product.department_name, "$" + product.product_price, product.product_stock_quantity);
+               
+               })
+            console.log(`${table.toString()}\n`);
+        })
+    }
+
+function addInventorytoExistingProducts(){
+    inquirer.prompt([
+        {
+            type: "input",
+            message: "Choose the id of the product you would like to update from the chart",
+            name: "updateId"
+        },
+        {
+            type: "input",
+            message: "Enter the quantity to be added to the existing inventory",
+            name: "quantityAdded"
+        }
+    ]).then(function(inventoryUpdate){
+        listProductsAvailable();
+        var productIdM = inventoryUpdate.updateId;
+        var quantityAddedM = inventoryUpdate.quantityAdded;
+
+        //RUN ORIGINAL QUERY TO GET CURRENT PRODUCT QUANTITY
+        var quantityQuery = `SELECT product_id, product_name, product_price, product_stock_quantity FROM productItems WHERE product_id = ${productIdM}`
+        connection.query(quantityQuery, function(err, results){
+            if (err) throw err;
+            currentQuantity = results[0].product_stock_quantity;
+            newProductQuantity = parseInt(currentQuantity) + parseInt(quantityAddedM);
+            
+        //RUN ANOTHER QUERY TO UPDATE TABLE
+        var updateQuantity = `UPDATE productItems SET product_stock_quantity = ${newProductQuantity} WHERE product_id = ${productIdM}`
+            connection.query(updateQuantity, function(err, results){
+                if (err) throw err;                            
+                console.log("Sale Processed - Thank You for shopping with Bamazon!")
+            })          
+        })
+    
+    })
+}
+
