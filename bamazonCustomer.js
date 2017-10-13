@@ -46,6 +46,8 @@ function chooseBamazonView(){
             managerPortal();
         } else if(chosenPortal.chosenViewPortal === "Supervisor View"){
             console.log("You have chosen the Supervisor View")
+            // trackStoreProfitAndOverhead();
+            // createProductSalesColumnAndPrintTable()
         } else if (chosenPortal.chosenViewPortal){
             console.log("Exit Bamazon application")
         }
@@ -128,7 +130,7 @@ function determineSufficientStock(chosenProductId, chosenUnitsRequested){
     var quantityQuery = `SELECT product_id, product_name, product_price, product_stock_quantity FROM productItems WHERE product_id = ${chosenProductId}`
     connection.query(quantityQuery, function(err, results){
         if (err) throw err;
-        currentQuantity = results[0].product_stock_quantity;
+        var currentQuantity = results[0].product_stock_quantity;
         var pricePerProduct = results[0].product_price;
 
         if(chosenUnitsRequested > currentQuantity){
@@ -310,6 +312,43 @@ function addNewProductToInventory(){
             if (err) throw err;
             console.log(results.affectedRows);
             console.log("NEW PRODUCT ADDED TO THE INVENTORY");
+        })
+    })
+}
+
+//MAIN SUPERVISOR FUNCTIONS
+
+//CREATE COLUMNS IN FOR STORE SALES TABLE
+    //CREATE COLUMN FOR PRODUCT SALES on PRODUCTitems table
+function createProductSalesColumnAndPrintTable(){
+    //Grab total productItems table
+    connection.query(`SELECT product_id, product_name, department_name, product_price, product_stock_quantity FROM productItems LEFT JOIN departments ON department_id = fk_department_id`, function(err, results){
+        if(err) throw err;
+        //Calculate total product sales
+        var currentProductQuantity = results[0].product_stock_quantity;
+        var pricePerProduct = results[0].product_price;
+        var thisProductTotalSales = currentProductQuantity * pricePerProduct
+
+    //Create a column for total product sales    
+        connection.query(`ALTER TABLE productItems ADD product_sales INT (11)`, 
+            function(err, result){
+                if (err) throw err;
+                connection.query(`INSERT INTO productItems (product_sales) VALUES ('${thisProductTotalSales}')`)
+                // console.log(result);
+            }
+        )
+
+    // //Print productItems table with new column in it
+    var table = new AsciiTable();
+    table.setHeading('ID', 'Product', 'Department Key', 'Price', 'Quantity', 'Total Item Sales');
+        connection.query(`SELECT product_id, product_name, department_name, product_price, product_stock_quantity, product_sales FROM productItems LEFT JOIN departments ON department_id = fk_department_id`, function(err, result){
+            if(err) throw err;
+            // console.log(result);
+            result.forEach((product) => {
+                table.addRow(product.product_id, product.product_name, product.department_name, "$" + product.product_price, product.product_stock_quantity, product.product_sales);
+               
+               })
+            console.log(`${table.toString()}\n`);
         })
     })
 }
