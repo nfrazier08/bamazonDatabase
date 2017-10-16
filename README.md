@@ -1,1 +1,3 @@
 # bamazonDatabase
+
+For this assignment:
