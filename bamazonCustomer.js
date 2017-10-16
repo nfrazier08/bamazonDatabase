@@ -110,7 +110,7 @@ function shop(){
         printRequestedItem(chosenProductId, chosenUnitsRequested);
         determineSufficientStock(chosenProductId, chosenUnitsRequested);
         //This doesn't work
-        listProductsAvailable(updateSQLTable(chosenUnitsRequested, currentQuantity));
+        // listProductsAvailable(updateSQLTable(chosenUnitsRequested, currentQuantity));
       })
 } //End of SHOP function
 
@@ -254,7 +254,7 @@ function addInventorytoExistingProducts(){
             name: "quantityAdded"
         }
     ]).then(function(inventoryUpdate){
-        listProductsAvailable();
+        // listProductsAvailable();
         var productIdM = inventoryUpdate.updateId;
         var quantityAddedM = inventoryUpdate.quantityAdded;
 
@@ -269,7 +269,7 @@ function addInventorytoExistingProducts(){
         var updateQuantity = `UPDATE productItems SET product_stock_quantity = ${newProductQuantity} WHERE product_id = ${productIdM}`
             connection.query(updateQuantity, function(err, results){
                 if (err) throw err;                            
-                console.log("Sale Processed - Thank You for shopping with Bamazon!")
+                console.log("Inventory Processed")
             })          
         })    
     })
