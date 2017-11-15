@@ -47,7 +47,7 @@ function chooseBamazonView(){
         } else if(chosenPortal.chosenViewPortal === "Supervisor View"){
             console.log("You have chosen the Supervisor View")
             // trackStoreProfitAndOverhead();
-            // createProductSalesColumnAndPrintTable()
+            createProductSalesColumnAndPrintTable()
         } else if (chosenPortal.chosenViewPortal){
             console.log("Exit Bamazon application")
         }
